@@ -45,23 +45,23 @@ class GifApp:
     def save_dir(self, value):
         self._dir_entry.delete(0, END)
         self._dir_entry.insert(0, value)
+    
+    @staticmethod
+    def gif_iterator(gif_path):
+        cap = cv2.VideoCapture(gif_path)
+        not_empty = True
+        while not_empty:
+            not_empty,frame = cap.read()
+            if not_empty:
+                yield frame
 
     @needs_save_dir
     def create_frames(self):
         gif_path = askopenfilename(parent=self.root, filetypes=[("Gif File", "*.gif")], title="Your Gif", initialfile="gifname.gif")
         gif_name, _ = path.splitext(os.path.basename(gif_path))
-        cap = cv2.VideoCapture(gif_path)
-        frame, last_frame, i = [0], [1], 1
-        while True:
-            frame = cap.read()[1]
-            if numpy.array_equal(last_frame, frame):
-                break
+        frame_iterator = self.gif_iterator(gif_path)
+        for i, frame in enumerate(frame_iterator, start=1):
             cv2.imwrite(path.join(self.save_dir, gif_name + str(i) + '.png'), frame)
-            last_frame = frame
-            i += 1
-
-        # fixes issue 1
-        os.remove(path.join(self.save_dir, gif_name + str(i - 1) + '.png'))
         self.root.destroy()
 
     def run(self):
