@@ -5,7 +5,7 @@ from tkinter import Tk, Button, Label, Entry, W, END
 from tkinter.filedialog import askdirectory, askopenfilename
 from functools import wraps
 from tkinter.messagebox import showinfo
-from os.path import splitext
+from os import path
 
 
 def force_gif_ext(file_path):
@@ -49,22 +49,19 @@ class GifApp:
     @needs_save_dir
     def create_frames(self):
         gif_path = askopenfilename(parent=self.root, filetypes=[("Gif File", "*.gif")], title="Your Gif", initialfile="gifname.gif")
-        path_no_ext, ext = splitext(gif_path)
-        i = path_no_ext.rfind('/')
-        gif_name = path_no_ext[i:]
-
+        gif_name, _ = path.splitext(os.path.basename(gif_path))
         cap = cv2.VideoCapture(gif_path)
         frame, last_frame, i = [0], [1], 1
         while True:
             frame = cap.read()[1]
             if numpy.array_equal(last_frame, frame):
                 break
-            cv2.imwrite(self.save_dir + gif_name + str(i) + '.png', frame)
+            cv2.imwrite(path.join(self.save_dir, gif_name + str(i) + '.png'), frame)
             last_frame = frame
             i += 1
 
         # fixes issue 1
-        os.remove(self.save_dir + gif_name + str(i - 1) + '.png')
+        os.remove(path.join(self.save_dir, gif_name + str(i - 1) + '.png'))
         self.root.destroy()
 
     def run(self):
